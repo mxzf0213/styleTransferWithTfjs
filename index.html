@@ -18,6 +18,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
     
+    
+</head>
+    
+<body>
+    <div>
+        <img id="content-img" src="./images/content.jpg" height="256">
+        <img id="style-img" src="./images/bricks.jpg" height="256">
+        <img id="gen-img" src="./images/statue_of_liberty.jpg" height="256">
+    </div>
+    <input name="imgFile" type="file" id="fileSelect" accept="image/*" style="display:none">
+
     <script>
         console.log('Loading Model...');
         async function loadModel() {
@@ -67,30 +78,24 @@
         // Helper function for setting an image
         function setImage(element, selectedValue) {
             if (selectedValue === 'file') {
-            console.log('file selected');
-            this.fileSelect.onchange = (evt) => {
+            //console.log('file selected');
+            fileSelect.onchange = (evt) => {
                 const f = evt.target.files[0];
                 const fileReader = new FileReader();
                 fileReader.onload = ((e) => {
                 element.src = e.target.result;
                 });
                 fileReader.readAsDataURL(f);
-                this.fileSelect.value = '';
             }
-            this.fileSelect.click();
+            fileSelect.click();
             } else if (selectedValue === 'pic') {
-            this.openModal(element);
+                openModal(element);
             } else if (selectedValue === 'random') {
-            const randomNumber = Math.floor(Math.random()*links.length);
-            element.src = links[randomNumber];
+                const randomNumber = Math.floor(Math.random()*links.length);
+                element.src = links[randomNumber];
             } else {
-            element.src = 'images/' + selectedValue + '.jpg';
+                element.src = 'images/' + selectedValue + '.jpg';
             }
-        }
-        
-        function load_img(path)
-        {
-                        
         }
 
         function loss()
@@ -112,6 +117,16 @@
         {
             
         }
+        
+        var vgg16_model;
+        var content_img; 
+        var contentImage = document.getElementById("content-img");
+        var style_img; 
+        var styleImage = document.getElementById("style-img");
+        var fileSelect = document.getElementById("fileSelect");
+        const IMAGE_HEIGHT = 224;
+        const IMAGE_WEIGHT = 224;
+        const NOISE = tf.scalar(0.5);
 
         //测试单元
         async function test()
@@ -127,26 +142,13 @@
             content_img = tf.ones([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3])
             const temp = get_random_img()
 
+            //setImage(contentImage,'bricks')
             //test_img.print()
             console.log(tf.memory())
         }
         test();
         
-        
-        var vgg16_model;
-        var content_img = document.getElementById("content-img");
-        var style_img = document.getElementById("style-img");
-        const IMAGE_HEIGHT = 224;
-        const IMAGE_WEIGHT = 224;
-        const NOISE = tf.scalar(0.5);
-        console.log(content_img)
-        
     </script>
-    
-</head>
-    
-<body>
-    <img id="content-img" src="./images/content.jpg" height="256">
 </body>
 
 </html>
