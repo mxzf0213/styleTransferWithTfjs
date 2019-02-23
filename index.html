@@ -47,6 +47,7 @@
         {
             const kernel = vgg16_model.getLayer(layer_name)['kernel'].val
             const bias = vgg16_model.getLayer(layer_name)['bias'].val
+            //console.log(kernel.trainable)
             return [kernel,bias]
         }
 
@@ -98,11 +99,10 @@
             }
         }
 
-        function buildModel()
+        function buildModel(input)
         {
-            net_input = tf.variable(tf.zeros([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3],dtype='float32'))
+            net_input = tf.variable(input)
             net_conv1_1 = conv_relu(net_input,get_wb('block1_conv1'))
-            net_conv1_1.print()
             net_conv1_2 = conv_relu(net_conv1_1,get_wb('block1_conv2'))
             net_pool1 = pool(net_conv1_2)
             net_conv2_1 = conv_relu(net_pool1,get_wb('block2_conv1'))
@@ -122,9 +122,24 @@
             net_pool5 = pool(net_conv5_3)
         }
 
-        function loss()
+        async function loss()
         {
+            await buildModel(gen_img)
             
+            var content_loss = 0.0
+            
+            // conv4_2
+            var M = net_conv4_2.shape[1] * net_conv4_2.shape[2]
+            var N = net_conv4_2.shape[3]
+            var weight = 0.5
+            content_loss += (1.0 / (2*M*N)) * tf.sum(tf.pow(tf.sub(net_conv4_2,content_conv4_2),2)).dataSync() * weight;
+            
+            //conv5_2
+            M = net_conv5_2.shape[1] * net_conv5_2.shape[2]
+            N = net_conv5_2.shape[3]
+            weight = 0.5
+            content_loss += (1.0 / (2*M*N)) * tf.sum(tf.pow(tf.sub(net_conv5_2,content_conv5_2),2)).dataSync() * weight;
+
         }
 
         function gram(x,size,deep)
@@ -160,15 +175,21 @@
         }
         
         var vgg16_model;
+        
         var content_img; 
         var contentImage = document.getElementById("content-img");
         var style_img; 
         var styleImage = document.getElementById("style-img");
+        var gen_img;
+        var genImage = document.getElementById("gen-img");
+
         var fileSelect = document.getElementById("fileSelect");
+        
         const IMAGE_HEIGHT = 224;
         const IMAGE_WEIGHT = 224;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
+        
         var net_input;
         var net_conv1_1;
         var net_conv1_2;
@@ -208,7 +229,7 @@
             //test_img.print()
             //gram(tf.tensor2d([1,2,3,4,5,6],[2,3]),2,3).print()
             //buildModel()
-            //buildModel()
+            //buildModel(tf.zeros([1,224,224,3]))
             //net_pool5.print()
             //preprocess(contentImage).print()
             console.log(tf.memory())
