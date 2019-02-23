@@ -98,6 +98,30 @@
             }
         }
 
+        function buildModel()
+        {
+            net_input = tf.variable(tf.zeros([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3],dtype='float32'))
+            net_conv1_1 = conv_relu(net_input,get_wb('block1_conv1'))
+            net_conv1_1.print()
+            net_conv1_2 = conv_relu(net_conv1_1,get_wb('block1_conv2'))
+            net_pool1 = pool(net_conv1_2)
+            net_conv2_1 = conv_relu(net_pool1,get_wb('block2_conv1'))
+            net_conv2_2 = conv_relu(net_conv2_1,get_wb('block2_conv2'))
+            net_pool2 = pool(net_conv2_2)
+            net_conv3_1 = conv_relu(net_pool2,get_wb('block3_conv1'))
+            net_conv3_2 = conv_relu(net_conv3_1,get_wb('block3_conv2'))
+            net_conv3_3 = conv_relu(net_conv3_2,get_wb('block3_conv3'))
+            net_pool3 = pool(net_conv3_3)
+            net_conv4_1 = conv_relu(net_pool3,get_wb('block4_conv1'))
+            net_conv4_2 = conv_relu(net_conv4_1,get_wb('block4_conv2'))
+            net_conv4_3 = conv_relu(net_conv4_2,get_wb('block4_conv3'))
+            net_pool4 = pool(net_conv4_3)
+            net_conv5_1 = conv_relu(net_pool4,get_wb('block5_conv1'))
+            net_conv5_2 = conv_relu(net_conv5_1,get_wb('block5_conv2'))
+            net_conv5_3 = conv_relu(net_conv5_2,get_wb('block5_conv3'))
+            net_pool5 = pool(net_conv5_3)
+        }
+
         function loss()
         {
             
@@ -105,9 +129,26 @@
 
         function gram(x,size,deep)
         {
-
+            return tf.tidy(()=>{
+            const y = x.reshape([size,deep])
+            const z = tf.matMul(tf.transpose(y),y)
+            return z}
+            )
         }
 
+        function preprocess(image)
+        {
+            return tf.tidy(
+                ()=>
+                {
+                    const tensor = tf.browser.fromPixels(image).toFloat()
+                    const resized = tf.image.resizeBilinear(tensor, [IMAGE_HEIGHT, IMAGE_WEIGHT])
+                    const reshape = resized.expandDims(0)
+                    const changed = reshape.sub(IMAGE_MEAN_VALUE)
+                    return changed
+                }
+            )
+        }
         function train()
         {
             
@@ -127,23 +168,49 @@
         const IMAGE_HEIGHT = 224;
         const IMAGE_WEIGHT = 224;
         const NOISE = tf.scalar(0.5);
+        const IMAGE_MEAN_VALUE = tf.scalar(128.)
+        var net_input;
+        var net_conv1_1;
+        var net_conv1_2;
+        var net_pool1;
+        var net_conv2_1;
+        var net_conv2_2;
+        var net_pool2;
+        var net_conv3_1;
+        var net_conv3_2;
+        var net_conv3_3;
+        var net_pool3;
+        var net_conv4_1;
+        var net_conv4_2;
+        var net_conv4_3;
+        var net_pool4;
+        var net_conv5_1;
+        var net_conv5_2;
+        var net_conv5_3;
+        var net_pool5;
 
         //测试单元
         async function test()
         {
             await loadModel();
+            //vgg16_model.summary()
             //console.log(tf.memory())
-            const input = tf.ones([1,224,224,3])
-            const wb = get_wb('block1_conv1')
-            const ret = conv_relu(input,wb)
-            const ret1 = pool(ret)
+            //const input = tf.ones([1,224,224,3])
+            //const wb = get_wb('block1_conv1')
+            //const ret = conv_relu(input,wb)
+            //const ret1 = pool(ret)
             //ret.print()
             //ret1.print()
-            content_img = tf.ones([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3])
-            const temp = get_random_img()
+            //content_img = tf.ones([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3])
+            //const temp = get_random_img()
 
             //setImage(contentImage,'bricks')
             //test_img.print()
+            //gram(tf.tensor2d([1,2,3,4,5,6],[2,3]),2,3).print()
+            //buildModel()
+            //buildModel()
+            //net_pool5.print()
+            //preprocess(contentImage).print()
             console.log(tf.memory())
         }
         test();
