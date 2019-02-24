@@ -23,8 +23,8 @@
     
 <body>
     <div>
-        <img id="content-img" src="./images/content.jpg" height="256">
-        <img id="style-img" src="./images/bricks.jpg" height="256">
+        <img id="content-img" src="./images/content.jpg" height="224">
+        <img id="style-img" src="./images/bricks.jpg" height="224">
         <img id="gen-img" src="./images/statue_of_liberty.jpg" height="256">
     </div>
     <input name="imgFile" type="file" id="fileSelect" accept="image/*" style="display:none">
@@ -256,13 +256,13 @@
 
         var fileSelect = document.getElementById("fileSelect");
         
-        const IMAGE_HEIGHT = 224;
-        const IMAGE_WEIGHT = 224;
+        const IMAGE_HEIGHT = 64;
+        const IMAGE_WEIGHT = 64;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
-        const TRAIN_STEPS = 1
+        const TRAIN_STEPS = 3
         
         var net_input;
         var net_conv1_1;
@@ -297,7 +297,7 @@
         async function test()
         {
             await loadModel();
-            //vgg16_model.summary()
+            vgg16_model.summary()
             //console.log(tf.memory())
             //const input = tf.ones([1,224,224,3])
             //const wb = get_wb('block1_conv1')
@@ -316,14 +316,16 @@
             //net_pool5.print()
             //preprocess(contentImage).print()
 
-            content_img = tf.ones([1,224,224,3])
-            style_img = tf.ones([1,224,224,3])
-            gen_img = tf.variable(tf.ones([1,224,224,3]))
+            content_img = preprocess(contentImage)
+            style_img = preprocess(styleImage)
+            gen_img = get_random_img()
+            //content_img.print()
+            //style_img.print()
             await initContentStyle();
             await train()
-            content_img.print()
-            style_img.print()
-            gen_img.print()
+            //content_img.print()
+            //style_img.print()
+            //gen_img.print()
             console.log(tf.memory())
         }
         test();
