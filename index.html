@@ -122,28 +122,26 @@
             net_pool5 = pool(net_conv5_3)
         }
 
-        async function loss()
+        function loss()
         {
-            await buildModel(gen_img)
-            
-            return tf.tidy(()=>{
+            buildModel(gen_img)
                 
-            var content_loss = 0.0
+            var content_loss = tf.scalar(0.)
             
             //computing content loss
             // conv4_2
             var M = net_conv4_2.shape[1] * net_conv4_2.shape[2]
             var N = net_conv4_2.shape[3]
             var weight = 0.5
-            content_loss += (1.0 / (2*M*N)) * tf.sum(tf.pow(tf.sub(net_conv4_2,content_conv4_2),2)).dataSync() * weight;
-            
+            content_loss = content_loss.add(tf.scalar(weight).div(tf.scalar(2*M*N)).mul(tf.sum(tf.pow(tf.sub(net_conv4_2,content_conv4_2),2))));
+
             //conv5_2
             M = net_conv5_2.shape[1] * net_conv5_2.shape[2]
             N = net_conv5_2.shape[3]
             weight = 0.5
-            content_loss += (1.0 / (2*M*N)) * tf.sum(tf.pow(tf.sub(net_conv5_2,content_conv5_2),2)).dataSync() * weight;
+            content_loss = content_loss.add(tf.scalar(weight).div(tf.scalar(2*M*N)).mul(tf.sum(tf.pow(tf.sub(net_conv5_2,content_conv5_2),2))));
 
-            var style_loss = 0.0
+            var style_loss = tf.scalar(0.)
 
             //computing style loss
             //conv1_1
@@ -152,7 +150,7 @@
             weight = 0.2
             const net_conv1_1_gram = gram(net_conv1_1,M,N)
             const style_conv1_1_gram = gram(style_conv1_1,M,N)
-            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv1_1_gram,style_conv1_1_gram),2)).dataSync() * weight;
+            style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv1_1_gram,style_conv1_1_gram),2))));
 
             //conv2_1
             M = net_conv2_1.shape[1] * net_conv2_1.shape[2];
@@ -160,15 +158,15 @@
             weight = 0.2
             const net_conv2_1_gram = gram(net_conv2_1,M,N)
             const style_conv2_1_gram = gram(style_conv2_1,M,N)
-            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv2_1_gram,style_conv2_1_gram),2)).dataSync() * weight;
-
+            style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv2_1_gram,style_conv2_1_gram),2))));
+            
             //conv3_1
             M = net_conv3_1.shape[1] * net_conv3_1.shape[2];
             N = net_conv3_1.shape[3];
             weight = 0.2
             const net_conv3_1_gram = gram(net_conv3_1,M,N)
             const style_conv3_1_gram = gram(style_conv3_1,M,N)
-            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv3_1_gram,style_conv3_1_gram),2)).dataSync() * weight;
+            style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv3_1_gram,style_conv3_1_gram),2))));
 
             //conv4_1
             M = net_conv4_1.shape[1] * net_conv4_1.shape[2];
@@ -176,7 +174,7 @@
             weight = 0.2
             const net_conv4_1_gram = gram(net_conv4_1,M,N)
             const style_conv4_1_gram = gram(style_conv4_1,M,N)
-            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv4_1_gram,style_conv4_1_gram),2)).dataSync() * weight;
+            style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv4_1_gram,style_conv4_1_gram),2))));
 
             //conv5_1
             M = net_conv5_1.shape[1] * net_conv5_1.shape[2];
@@ -184,11 +182,10 @@
             weight = 0.2
             const net_conv5_1_gram = gram(net_conv5_1,M,N)
             const style_conv5_1_gram = gram(style_conv5_1,M,N)
-            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv5_1_gram,style_conv5_1_gram),2)).dataSync() * weight;
+            style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv5_1_gram,style_conv5_1_gram),2))));
 
-            var loss = ALPHA * content_loss + BETA * style_loss;
-            return loss;}
-            )
+            const loss = tf.scalar(ALPHA).mul(content_loss).add(tf.scalar(BETA).mul(style_loss));
+            return loss;
         }
 
         function gram(x,size,deep)
@@ -230,7 +227,17 @@
 
         function train()
         {
-            
+            const optimizer = tf.train.adam(1.0)
+            for(let i=0; i < TRAIN_STEPS; i++)
+            {
+                optimizer.minimize(
+                    ()=>{
+                        const x = loss()
+                        x.print()
+                        return x
+                    }
+                )
+            }
         }
 
         function main()
@@ -255,6 +262,7 @@
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
+        const TRAIN_STEPS = 1
         
         var net_input;
         var net_conv1_1;
@@ -312,8 +320,10 @@
             style_img = tf.ones([1,224,224,3])
             gen_img = tf.variable(tf.ones([1,224,224,3]))
             await initContentStyle();
-            const x = await loss();
-            console.log(x)
+            await train()
+            content_img.print()
+            style_img.print()
+            gen_img.print()
             console.log(tf.memory())
         }
         test();
