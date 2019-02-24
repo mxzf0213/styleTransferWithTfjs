@@ -47,7 +47,8 @@
         {
             const kernel = vgg16_model.getLayer(layer_name)['kernel'].val
             const bias = vgg16_model.getLayer(layer_name)['bias'].val
-            //console.log(kernel.trainable)
+            kernel.trainable = false
+            bias.trainable = false
             return [kernel,bias]
         }
 
@@ -56,14 +57,14 @@
             return tf.tidy(()=>{
                 const conv = tf.conv2d(input,wb[0],strides=[1,1],pad='same')
                 const relu = tf.relu(tf.add(conv,wb[1]))
-                return relu
+                return tf.variable(relu)
                 }
             )
         }
 
         function pool(input)
         {
-            return tf.maxPool(input,filterSize=[2,2],strides=[2,2],pad='same')
+            return tf.variable(tf.maxPool(input,filterSize=[2,2],strides=[2,2],pad='same'))
         }
         
         function get_random_img()
@@ -262,7 +263,7 @@
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
-        const TRAIN_STEPS = 3
+        const TRAIN_STEPS = 100
         
         var net_input;
         var net_conv1_1;
@@ -297,7 +298,7 @@
         async function test()
         {
             await loadModel();
-            vgg16_model.summary()
+            //vgg16_model.summary()
             //console.log(tf.memory())
             //const input = tf.ones([1,224,224,3])
             //const wb = get_wb('block1_conv1')
@@ -321,11 +322,15 @@
             gen_img = get_random_img()
             //content_img.print()
             //style_img.print()
+            //get_wb('block1_conv1')[1].print()
             await initContentStyle();
             await train()
             //content_img.print()
             //style_img.print()
             //gen_img.print()
+            //console.log('aa')
+            //get_wb('block1_conv1')[1].print()
+            
             console.log(tf.memory())
         }
         test();
