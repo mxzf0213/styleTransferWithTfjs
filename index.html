@@ -11,7 +11,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <!-- Popper JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script sr njs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
 
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
@@ -23,9 +23,9 @@
     
 <body>
     <div>
-        <img id="content-img" src="./images/content.jpg" height="224">
+        <img id="content-img" src="./images/statue_of_liberty.jpg" height="224">
         <img id="style-img" src="./images/bricks.jpg" height="224">
-        <img id="gen-img" src="./images/statue_of_liberty.jpg" height="256">
+        <canvas id="gen-img"  height="64">
     </div>
     <input name="imgFile" type="file" id="fileSelect" accept="image/*" style="display:none">
 
@@ -57,14 +57,14 @@
             return tf.tidy(()=>{
                 const conv = tf.conv2d(input,wb[0],strides=[1,1],pad='same')
                 const relu = tf.relu(tf.add(conv,wb[1]))
-                return tf.variable(relu)
+                return relu
                 }
             )
         }
 
         function pool(input)
         {
-            return tf.variable(tf.maxPool(input,filterSize=[2,2],strides=[2,2],pad='same'))
+            return tf.maxPool(input,filterSize=[2,2],strides=[2,2],pad='same')
         }
         
         function get_random_img()
@@ -72,7 +72,7 @@
             return tf.tidy(()=>{
                 const noise_image = tf.randomUniform([1,IMAGE_HEIGHT,IMAGE_WEIGHT,3],-20,20,dtype='float32')
                 const random_image = tf.mul(noise_image , NOISE).add(tf.mul(content_img , tf.sub(tf.scalar(1) , NOISE)))
-                return random_image}
+                return tf.variable(random_image)}
             )
         }
         
@@ -102,7 +102,7 @@
 
         function buildModel(input)
         {
-            net_input = tf.variable(input)
+            net_input = input
             net_conv1_1 = conv_relu(net_input,get_wb('block1_conv1'))
             net_conv1_2 = conv_relu(net_conv1_1,get_wb('block1_conv2'))
             net_pool1 = pool(net_conv1_2)
@@ -125,8 +125,10 @@
 
         function loss()
         {
+            return tf.tidy(()=>{
+
             buildModel(gen_img)
-                
+            
             var content_loss = tf.scalar(0.)
             
             //computing content loss
@@ -135,7 +137,7 @@
             var N = net_conv4_2.shape[3]
             var weight = 0.5
             content_loss = content_loss.add(tf.scalar(weight).div(tf.scalar(2*M*N)).mul(tf.sum(tf.pow(tf.sub(net_conv4_2,content_conv4_2),2))));
-
+            
             //conv5_2
             M = net_conv5_2.shape[1] * net_conv5_2.shape[2]
             N = net_conv5_2.shape[3]
@@ -186,7 +188,8 @@
             style_loss =style_loss.add(tf.scalar(weight).div(tf.scalar(4*M*M*N*N)).mul(tf.sum(tf.pow(tf.sub(net_conv5_1_gram,style_conv5_1_gram),2))));
 
             const loss = tf.scalar(ALPHA).mul(content_loss).add(tf.scalar(BETA).mul(style_loss));
-            return loss;
+            return loss;}
+            )
         }
 
         function gram(x,size,deep)
@@ -212,6 +215,13 @@
             )
         }
 
+        function topixel(image)
+        {
+            const tensor = image.add(IMAGE_MEAN_VALUE)
+            const resized = tensor.reshape([IMAGE_HEIGHT,IMAGE_WEIGHT,3])
+            const changed = resized.div(tf.scalar(255.))
+            tf.browser.toPixels(changed,genImage)
+        }
         async function initContentStyle()
         {
             await buildModel(content_img);
@@ -233,12 +243,12 @@
             {
                 optimizer.minimize(
                     ()=>{
-                        const x = loss()
-                        x.print()
-                        return x
+                        console.log(i,tf.memory())
+                        return loss()
                     }
                 )
             }
+            topixel(gen_img)
         }
 
         function main()
@@ -257,13 +267,13 @@
 
         var fileSelect = document.getElementById("fileSelect");
         
-        const IMAGE_HEIGHT = 64;
-        const IMAGE_WEIGHT = 64;
+        const IMAGE_HEIGHT = 224;
+        const IMAGE_WEIGHT = 224;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
-        const TRAIN_STEPS = 100
+        const TRAIN_STEPS = 20
         
         var net_input;
         var net_conv1_1;
@@ -324,6 +334,7 @@
             //style_img.print()
             //get_wb('block1_conv1')[1].print()
             await initContentStyle();
+            console.log(tf.memory())
             await train()
             //content_img.print()
             //style_img.print()
