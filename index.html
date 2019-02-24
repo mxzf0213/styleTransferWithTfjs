@@ -126,8 +126,11 @@
         {
             await buildModel(gen_img)
             
+            return tf.tidy(()=>{
+                
             var content_loss = 0.0
             
+            //computing content loss
             // conv4_2
             var M = net_conv4_2.shape[1] * net_conv4_2.shape[2]
             var N = net_conv4_2.shape[3]
@@ -140,6 +143,52 @@
             weight = 0.5
             content_loss += (1.0 / (2*M*N)) * tf.sum(tf.pow(tf.sub(net_conv5_2,content_conv5_2),2)).dataSync() * weight;
 
+            var style_loss = 0.0
+
+            //computing style loss
+            //conv1_1
+            M = net_conv1_1.shape[1] * net_conv1_1.shape[2];
+            N = net_conv1_1.shape[3];
+            weight = 0.2
+            const net_conv1_1_gram = gram(net_conv1_1,M,N)
+            const style_conv1_1_gram = gram(style_conv1_1,M,N)
+            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv1_1_gram,style_conv1_1_gram),2)).dataSync() * weight;
+
+            //conv2_1
+            M = net_conv2_1.shape[1] * net_conv2_1.shape[2];
+            N = net_conv2_1.shape[3];
+            weight = 0.2
+            const net_conv2_1_gram = gram(net_conv2_1,M,N)
+            const style_conv2_1_gram = gram(style_conv2_1,M,N)
+            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv2_1_gram,style_conv2_1_gram),2)).dataSync() * weight;
+
+            //conv3_1
+            M = net_conv3_1.shape[1] * net_conv3_1.shape[2];
+            N = net_conv3_1.shape[3];
+            weight = 0.2
+            const net_conv3_1_gram = gram(net_conv3_1,M,N)
+            const style_conv3_1_gram = gram(style_conv3_1,M,N)
+            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv3_1_gram,style_conv3_1_gram),2)).dataSync() * weight;
+
+            //conv4_1
+            M = net_conv4_1.shape[1] * net_conv4_1.shape[2];
+            N = net_conv4_1.shape[3];
+            weight = 0.2
+            const net_conv4_1_gram = gram(net_conv4_1,M,N)
+            const style_conv4_1_gram = gram(style_conv4_1,M,N)
+            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv4_1_gram,style_conv4_1_gram),2)).dataSync() * weight;
+
+            //conv5_1
+            M = net_conv5_1.shape[1] * net_conv5_1.shape[2];
+            N = net_conv5_1.shape[3];
+            weight = 0.2
+            const net_conv5_1_gram = gram(net_conv5_1,M,N)
+            const style_conv5_1_gram = gram(style_conv5_1,M,N)
+            style_loss += (1.0/(4*M*M*N*N)) * tf.sum(tf.pow(tf.sub(net_conv5_1_gram,style_conv5_1_gram),2)).dataSync() * weight;
+
+            var loss = ALPHA * content_loss + BETA * style_loss;
+            return loss;}
+            )
         }
 
         function gram(x,size,deep)
@@ -164,6 +213,21 @@
                 }
             )
         }
+
+        async function initContentStyle()
+        {
+            await buildModel(content_img);
+            content_conv4_2 = net_conv4_2;
+            content_conv5_2 = net_conv5_2;
+
+            await buildModel(style_img);
+            style_conv1_1 = net_conv1_1;
+            style_conv2_1 = net_conv2_1;
+            style_conv3_1 = net_conv3_1;
+            style_conv4_1 = net_conv4_1;
+            style_conv5_1 = net_conv5_1;
+        }
+
         function train()
         {
             
@@ -189,6 +253,8 @@
         const IMAGE_WEIGHT = 224;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
+        const ALPHA = 1
+        const BETA = 500
         
         var net_input;
         var net_conv1_1;
@@ -209,6 +275,15 @@
         var net_conv5_2;
         var net_conv5_3;
         var net_pool5;
+
+        var content_conv4_2;
+        var content_conv5_2;
+        
+        var style_conv1_1;
+        var style_conv2_1;
+        var style_conv3_1;
+        var style_conv4_1;
+        var style_conv5_1;
 
         //测试单元
         async function test()
@@ -232,6 +307,13 @@
             //buildModel(tf.zeros([1,224,224,3]))
             //net_pool5.print()
             //preprocess(contentImage).print()
+
+            content_img = tf.ones([1,224,224,3])
+            style_img = tf.ones([1,224,224,3])
+            gen_img = tf.variable(tf.ones([1,224,224,3]))
+            await initContentStyle();
+            const x = await loss();
+            console.log(x)
             console.log(tf.memory())
         }
         test();
