@@ -218,7 +218,7 @@
         function topixel(image)
         {
             const tensor = image.add(IMAGE_MEAN_VALUE)
-            const resized = tensor.reshape([IMAGE_HEIGHT,IMAGE_WEIGHT,3])
+            const resized = tf.image.resizeBilinear(tensor, [224, 224]).reshape([224,224,3])
             const changed = resized.div(tf.scalar(255.))
             tf.browser.toPixels(changed,genImage)
         }
@@ -267,13 +267,13 @@
 
         var fileSelect = document.getElementById("fileSelect");
         
-        const IMAGE_HEIGHT = 224;
-        const IMAGE_WEIGHT = 224;
+        const IMAGE_HEIGHT = 64;
+        const IMAGE_WEIGHT = 64;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
-        const TRAIN_STEPS = 20
+        const TRAIN_STEPS = 10
         
         var net_input;
         var net_conv1_1;
