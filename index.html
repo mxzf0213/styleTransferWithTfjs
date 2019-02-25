@@ -11,8 +11,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <!-- Popper JS -->
-    <script sr njs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
 
@@ -218,8 +218,8 @@
         function topixel(image)
         {
             const tensor = image.add(IMAGE_MEAN_VALUE)
-            const resized = tf.image.resizeBilinear(tensor, [224, 224]).reshape([224,224,3])
-            const changed = resized.div(tf.scalar(255.))
+            const resized = tensor.reshape([224,224,3])
+            const changed = resized.div(tf.scalar(255.)).minimum(tf.scalar(1.)).maximum(tf.scalar(0.))
             tf.browser.toPixels(changed,genImage)
         }
         async function initContentStyle()
@@ -267,13 +267,13 @@
 
         var fileSelect = document.getElementById("fileSelect");
         
-        const IMAGE_HEIGHT = 64;
-        const IMAGE_WEIGHT = 64;
+        const IMAGE_HEIGHT = 224;
+        const IMAGE_WEIGHT = 224;
         const NOISE = tf.scalar(0.5);
         const IMAGE_MEAN_VALUE = tf.scalar(128.)
         const ALPHA = 1
         const BETA = 500
-        const TRAIN_STEPS = 10
+        const TRAIN_STEPS = 100
         
         var net_input;
         var net_conv1_1;
