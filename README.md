@@ -8,8 +8,8 @@
 # 改进空间
 * 这应该是最早的风格迁移实现方法了吧，现在最新进展可以对一种风格进行训练，更厉害的有对任意风格特征的快速提取
 * 附大佬们的实现：
-[AaronJny](https://github.com/AaronJny/nerual_style_change)
-[reiinakano](https://github.com/reiinakano/arbitrary-image-stylization-tfjs)
+[AaronJny](https://github.com/AaronJny/nerual_style_change)、
+[reiinakano](https://github.com/reiinakano/arbitrary-image-stylization-tfjs)、
 [hzy46](https://github.com/hzy46/fast-neural-style-tensorflow)
 # 风格迁移相关论文：
 * [Texture Synthesis Using Convolutional Neural Networks](https://arxiv.org/abs/1505.07376)
