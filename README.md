@@ -1,5 +1,5 @@
 # 使用tensorflow.js进行在线风格迁移
-* 需要提前安装好python3、keras、tensorflowjs、firefox浏览器
+* 需要提前安装好python3、tensorflow、keras、tensorflowjs、firefox浏览器
 * 从[AaronJny](https://github.com/AaronJny/nerual_style_change)的tensorflow项目进行修改，为了尽可能减少计算资源消耗，删除了loss函数中关于内容损失的部分以及风格损失的后两次卷积损失计算
 * 将VGG19模型改为VGG16模型，从keras.applications下载
 * 设定图片尺寸为[224,224,3]、training step = 150 的前提下，浏览器将等待5~10分钟（太慢了，一方面硬件不行，另一方面感觉在浏览器下进行太深的学习不靠谱）
