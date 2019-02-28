@@ -1,3 +1,3 @@
-from keras.applications.vgg19 import VGG19
-model = VGG19(include_top=False)
-model.save('vgg19.h5')
+from keras.applications.vgg16 import VGG16
+model = VGG16(include_top=False)
+model.save('vgg16.h5')
