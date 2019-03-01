@@ -8,7 +8,7 @@
 * 效果图：
 ![demo1](./demo/demo1.jpg)
 ![demo2](./demo/demo2.jpg)
-![demo3](https://raw.githubusercontent.com/mxzf0213/styleTransferWithTfjs/master/demo/demo3.jpg)
+![demo3](./demo/demo3.jpg)
 # 改进空间
 * 这应该是最早的风格迁移实现方法了吧，现在最新进展可以对一种风格进行训练，更厉害的有对任意风格特征的快速提取
 * 附大佬们的实现：
