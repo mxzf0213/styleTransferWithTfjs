@@ -125,6 +125,7 @@ function gram(x, size, deep) {
 }
 
 function preprocess(image) {
+    console.log(image.width, image.height)
     return tf.tidy(
         () => {
             const tensor = tf.browser.fromPixels(image).toFloat()
@@ -139,9 +140,11 @@ function preprocess(image) {
 function topixel(image) {
     const tensor = image.add(IMAGE_MEAN_VALUE)
     const resized = tensor.reshape([IMAGE_HEIGHT, IMAGE_WEIGHT, 3])
-    const changed = resized.div(tf.scalar(255.)).clipByValue(0., 1.)
+    const modified = tf.image.resizeBilinear(resized, [IMAGE_HEIGHT, contentImage.width])
+    const changed = modified.div(tf.scalar(255.)).clipByValue(0., 1.)
     tensor.dispose()
     resized.dispose()
+    modified.dispose()
     tf.browser.toPixels(changed, genImage)
 }
 
