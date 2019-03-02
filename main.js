@@ -1,4 +1,4 @@
-
+//从model.json参数结构文件加载VGG16模型
 console.log('Loading Model...');
 async function loadModel() {
     vgg16_model = await tf.loadLayersModel('./model/model.json')
@@ -24,6 +24,7 @@ function get_wb(layer_name) {
     return [kernel, bias]
 }
 
+//卷积层实现
 function conv_relu(input, wb) {
     return tf.tidy(() => {
         const conv = tf.conv2d(input, wb[0], strides = [1, 1], pad = 'same')
@@ -33,10 +34,12 @@ function conv_relu(input, wb) {
     )
 }
 
+//池化层实现->最大值池化
 function pool(input) {
     return tf.maxPool(input, filterSize = [2, 2], strides = [2, 2], pad = 'same')
 }
 
+//根据内容图片产生噪声图片
 function get_random_img() {
     return tf.tidy(() => {
         const noise_image = tf.randomUniform([1, IMAGE_HEIGHT, IMAGE_WEIGHT, 3], -20, 20, dtype = 'float32')
@@ -67,6 +70,7 @@ function setImage(element, selectedValue) {
     }
 }
 
+//建立模型，只用到了前若干层，所以不用取原模型的所有层
 function buildModel(input) {
     net_input = input
     net_conv1_1 = conv_relu(net_input, block1_conv1)
@@ -78,6 +82,7 @@ function buildModel(input) {
     net_conv3_1 = conv_relu(net_pool2, block3_conv1)
 }
 
+//计算损失函数，这里仅计算风格损失
 function loss() {
     return tf.tidy(() => {
 
@@ -115,6 +120,7 @@ function loss() {
     )
 }
 
+//计算feature矩阵的gram(相关性)矩阵
 function gram(x, size, deep) {
     return tf.tidy(() => {
         const y = x.reshape([size, deep])
@@ -124,6 +130,7 @@ function gram(x, size, deep) {
     )
 }
 
+//预处理图片张量以符合输入网络的size
 function preprocess(image) {
     console.log(image.width, image.height)
     return tf.tidy(
@@ -137,6 +144,7 @@ function preprocess(image) {
     )
 }
 
+//将输出张量转化为图片
 function topixel(image) {
     const tensor = image.add(IMAGE_MEAN_VALUE)
     const resized = tensor.reshape([IMAGE_HEIGHT, IMAGE_WEIGHT, 3])
@@ -148,6 +156,7 @@ function topixel(image) {
     tf.browser.toPixels(changed, genImage)
 }
 
+//按钮激活
 function enableStylizeButtons() {
     styleButton.disabled = false;
     styleButton.textContent = 'Stylize';
@@ -156,6 +165,7 @@ function disableStylizeButtons() {
     styleButton.disabled = true;
 }
 
+//加载模型参数以及得到风格图片特征矩阵
 async function initContentStyle() {
     block1_conv1 = get_wb('block1_conv1');
     block1_conv2 = get_wb('block1_conv2');
@@ -169,6 +179,7 @@ async function initContentStyle() {
     style_conv3_1 = net_conv3_1;
 }
 
+//训练模型，采用adam算法优化，learning_rate = 1.0
 function train() {
     const optimizer = tf.train.adam(1.0)
     for (let i = 0; i < TRAIN_STEPS; i++) {
@@ -209,6 +220,7 @@ styleButton.onclick = () => {
     })
 };
 
+//初始化web摄像头
 function initalizeWebcamVariables() {
     camModal = $('#cam-modal');
 
@@ -242,6 +254,7 @@ function initalizeWebcamVariables() {
 
 initalizeWebcamVariables();
 
+//打开摄像头
 function openModal(element) {
     camModal.modal('show');
     snapButton.onclick = () => {
@@ -285,7 +298,7 @@ var block2_conv1;
 var block2_conv2;
 var block3_conv1;
 
-//进行训练
+//训练的一系列过程
 async function test() {
     await tf.nextFrame();
     styleButton.textContent = 'Stylizing image...';
