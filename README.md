@@ -6,7 +6,7 @@
 # 快速开始
 * 执行start.sh
 
-`./start.sh`
+ `./start.sh`
 * 效果图：
 ![demo1](./demo/demo1.jpg)
 ![demo2](./demo/demo2.jpg)
